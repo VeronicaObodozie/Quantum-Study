@@ -1,9 +1,12 @@
+# PennyLane
+This folder shows the paths taken when learning Pennylane.
+
 ## PennyLane AI learning codebooks and demos.
 All demos and codebooks are gotten from PennyLane AI
 ### Codebook
-* Intro QC
-* Single Qbit
-* Multi Qbit
+* Intro QC - Complete
+* Single Qbit -Complete
+* Multi Qbit - Complete
 * Basic QA
 * Grovers
 * Q Fourier
