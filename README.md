@@ -1,3 +1,5 @@
+# Closest to prep as pf may 8th 2025
+Contains all initial tests, and simple projects.
 # Quantum-Study
 This repository is to track changes learning progress and highlight resources used. Although not updated often.
 
