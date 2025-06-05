@@ -1,0 +1,87 @@
+After 3 Epochs
+QUANTUM- RESNET 18 MODEL:
+Saving model
+Training finished, took 2360.3406s
+Total Number of Parameters: 11242474
+Finished Training
+
+Testing
+---------------LIGHTBOX TESTING----------------
+Best orientation error:2.8559883272055417
+Best translarion error: 0.5984073877334595
+The Pose error is: 3.9466378688812256
+---------------SUNLAMP TESTING----------------
+Best orientation error:2.939517299261589
+Best translarion error: 0.5972103476524353
+The Pose error is: 3.94633412361145
+
+
+QUANTUM- RESNET 50 MODEL:
+
+Saving model
+3,  train loss: 4.613, val loss: 4.651
+Training finished, took 4484.9092s
+Total Number of Parameters: 23770602
+Finished Training
+
+---------------LIGHTBOX TESTING----------------
+Best orientation error:2.8626657412733283
+Best translarion error: 0.595256507396698
+The Pose error is: 3.940539836883545
+---------------SUNLAMP TESTING----------------
+Best orientation error:2.952558868022358
+Best translarion error: 0.5968997478485107
+The Pose error is: 3.9392404556274414
+
+QUANTUM RESNET 18 NO BATCH NORM
+Saving model
+Training finished, took 2692.7619s
+Total Number of Parameters: 11242218
+Finished Training
+
+Testing
+---------------LIGHTBOX TESTING----------------
+Best orientation error:2.999823776354428
+Best translarion error: 0.5975987911224365
+The Pose error is: 3.9388248920440674
+---------------SUNLAMP TESTING----------------
+Best orientation error:2.9988391509739256
+Best translarion error: 0.5967110991477966
+The Pose error is: 3.938141345977783
+
+
+AFTER 11 EPOCHS
+Early stopping
+Training finished, took 166245.4547s
+Total Number of Parameters: 11242218
+Finished Training
+
+Testing
+---------------LIGHTBOX TESTING----------------
+Best orientation error:2.855612172913565
+Best translarion error: 0.5955316424369812
+The Pose error is: 3.9157838821411133
+---------------SUNLAMP TESTING----------------
+Best orientation error:2.8748837981374127
+Best translarion error: 0.5981380939483643
+The Pose error is: 3.9199795722961426
+
+
+CLASSIC  MODEL
+
+Conv 3x3 (3, 128) -> bnorm, Relu -> FC
+
+Training finished, took 3745.6941s
+Total Number of Parameters: 6663
+Finished Training
+
+Testing
+
+---------------LIGHTBOX TESTING----------------
+Best orientation error:2.8089807666533613
+Best translarion error: 0.007792940363287926
+The Pose error is: 3.3749842643737793
+---------------SUNLAMP TESTING----------------
+Best orientation error:2.8171076926473644
+Best translarion error: 0.00943527091294527
+The Pose error is: 3.3898563385009766

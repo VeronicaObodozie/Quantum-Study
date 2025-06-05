@@ -4,6 +4,7 @@ from utils import *
 from Test_Metrics import *
 import torch 
 from torchvision import transforms, models 
+from torchvision.transforms import v2
 from torch.utils.data import DataLoader 
 
 from torch.utils.data import Dataset, DataLoader
@@ -47,10 +48,10 @@ def main():
     batch_size = 16 # Change Batch Size o
     learning_rate = 1e-3 #4
     num_workers =2#4
-    nepochs = 3 #"Use it to change iterations"
+    nepochs = 5 #"Use it to change iterations"
     weight_decay = 1e-4
     best_loss = 1e+20 # number gotten from initial resnet18 run
-    stop_count = 6
+    stop_count = 7
     print(f'batch_size = {batch_size}, learning_rate = {learning_rate} num_workers = {num_workers} , nepochs = {nepochs} , best_loss = {best_loss}, weight_decay={weight_decay}')
     ##-----------------------------------------------------------------------------------------------------------##
 
@@ -64,6 +65,15 @@ def main():
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
 
+    # transforms = v2.Compose([
+    #     v2.ToImage(),  # Convert to tensor, only needed if you had a PIL image
+    #     v2.ToDtype(torch.uint8, scale=True),  # optional, most input are already uint8 at this point
+    #     # ...
+    #     v2.RandomResizedCrop(size=(224, 224), antialias=True),  # Or Resize(antialias=True)
+    #     # ...
+    #     v2.ToDtype(torch.float32, scale=True),  # Normalize expects float input
+    #     v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    # ])
 
     # Loading training set, using 20% for validation
     speed_root = "./speedplusv2/"
@@ -72,31 +82,38 @@ def main():
     sunlamp_test_set = PyTorchSatellitePoseEstimationDataset('sunlamp',  speed_root, data_transforms)
     lightbox_test_set = PyTorchSatellitePoseEstimationDataset('lightbox',  speed_root, data_transforms)
 
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
     val_dataloader = DataLoader(Validation_set, batch_size=batch_size, shuffle=False, num_workers=num_workers)
     sunlamp_dataloader = DataLoader(sunlamp_test_set, batch_size=batch_size, shuffle=False, num_workers=num_workers)
     lightbox_dataloader = DataLoader(lightbox_test_set, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
     #--------------------------------------------#
     #------------------ Training Parameters --------------------------#
-    # print('-------------------Pretrained Model Type: RESNET 50------------------------')
-    # resnet_input = (3, 224, 224)
-    # net = PoseResNetModel(resnet_input)
-    # PATH = './pose_resNet.pth' # Path to save the best model
+    print('-------------------Pretrained Model Type: RESNET 50------------------------')
+    resnet_input = (3, 224, 224)
+    net = unet(resnet_input)
+    PATH = './pose_unet.pth' # Path to save the best model
     #net.to(device)
 
-    print('-------------------Pretrained Model Type: RESNET 50 Quantum Classifier------------------------')
-    resnet_input = (3, 224, 224)
-    net = PoseQuanModel(resnet_input, n_qubits)
-    PATH = './pose_quan.pth' # Path to save the best model
+    # print('-------------------Pretrained Model Type: RESNET 50 Quantum Classifier------------------------')
+    # resnet_input = (3, 224, 224)
+    # net = PoseQuanModel(resnet_input, n_qubits)
+    # PATH = './pose_quanFinal.pth' # Path to save the best model
 
+
+
+    # print('------------------- CNN Custom ------------------------')
+    # resnet_input = (3, 224, 224)
+    # net = PoseNew(resnet_input)
+    # PATH = './pose_newq.pth' # Path to save the best model
 
     net.to(device)
 
     criterion = torch.nn.MSELoss()
-    optimizer = torch.optim.AdamW(net.parameters(), lr=learning_rate)  # all params trained
-    #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.9)
-    scheduler = ExponentialLR(optimizer, gamma=0.9)
+    # optimizer = torch.optim.AdamW(net.parameters(), lr=learning_rate)  # all params trained
+    optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9) 
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.9)
+    # scheduler = ExponentialLR(optimizer, gamma=0.9)
 
 #--------------------------------------------#
     #---------------------- Training and Validation ----------------------#
@@ -169,14 +186,15 @@ def main():
     plt.ylabel("Loss")
     plt.legend()
     plt.grid()
-    plt.savefig("lossfunction.png") 
+    plt.savefig("lossfunctionunet.png") 
     plt.show()
     print('Finished Training\n')
     #--------------------------------------------#
     #---------------------- Testing ----------------------#
     print('Testing \n')
-    # net = PoseResNetModel(resnet_input)
-    net = PoseQuanModel(resnet_input, n_qubits)
+    net = PoseResNetModel(resnet_input)
+    # net = PoseQuanModel(resnet_input, n_qubits)
+    # net = PoseNew(resnet_input)
     net.load_state_dict(torch.load(PATH))
     print('---------------LIGHTBOX TESTING----------------')
     evaluate(net, lightbox_dataloader, device)

@@ -7,9 +7,15 @@ def epose(q_pred, q_real, r_pred, r_real):
     # norm 1 to find magnitude
     for l in range(len(r_pred)):
         q_err = 2*(np.arccos(abs((q_pred[l] @ np.transpose(q_real[l])))))
-        rot_err.append(np.array(q_err))
+        if q_err < 0.169:
+            rot_err.append(np.array(q_err))
+        else:
+            rot_err.append(np.array(0))
         r_err = abs(norm(r_real[l]-r_pred[l], 2) / norm(r_real[l], 2))
-        tr_err.append(np.array(r_err))
+        if r_err < 0.002173:
+            tr_err.append(np.array(r_err))
+        else:
+            tr_err.append(np.array(0))
 
     return rot_err, tr_err
 
@@ -39,9 +45,10 @@ def evaluate(model, dataloader, device):
     # Test
     #-----------Pose Error-----------#
     print(f'Best orientation error:{np.min(E_q)}')
-    print(f'Best translarion error: {np.min(E_r)}')
+    print(f'Best translation error: {np.min(E_r)}')
     E_p = np.sum([E_q, E_r], dtype=np.float32)/len(dataloader.dataset)
     print(f'The Pose error is: {E_p}')
+    print(f'Total # of images {len(dataloader.dataset)}')
     
     #----------- METRICS -------------#
 
