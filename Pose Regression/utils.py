@@ -127,12 +127,74 @@ dev = qml.device("default.qubit", wires=n_qubits)
 
 # Making the Quantum layer
 @qml.qnode(dev)
+# def qnode(inputs, weights):
+#     #qml.AngleEmbedding(inputs, wires=range(n_qubits))
+#     qml.AmplitudeEmbedding(inputs, wires=range(n_qubits), pad_with= 0, normalize= True)
+#     qml.BasicEntanglerLayers(weights, wires=range(n_qubits))
+#     return [qml.expval(qml.PauliZ(wires=i)) for i in range(n_qubits)]
+
+# Try random layer and angle emedding
+# This is for Quantum 3
 def qnode(inputs, weights):
-    #qml.AngleEmbedding(inputs, wires=range(n_qubits))
+    # qml.AngleEmbedding(inputs, wires=range(n_qubits)) # Angle requires only 4 inputs
     qml.AmplitudeEmbedding(inputs, wires=range(n_qubits), pad_with= 0, normalize= True)
-    qml.BasicEntanglerLayers(weights, wires=range(n_qubits))
+    #qml.BasicEntanglerLayers(weights, wires=range(n_qubits))
+    qml.RandomLayers(weights=weights, wires=range(n_qubits))
     return [qml.expval(qml.PauliZ(wires=i)) for i in range(n_qubits)]
 
+# Quantum circuit 4
+class PoseQuantumNew(nn.Module):
+    # Quantum -> Convolutional - > Bnorm, relu, Avg pool -> FC
+    def __init__(self, shape):
+        super().__init__()
+        self.input_shape = shape
+        self.conv1 = qml.qnn.TorchLayer(qnode, self.weight_shapes) # Quantum Layer
+        self.bnorm2 = nn.BatchNorm2d(128)
+        self.relu = nn.ReLU()
+        self.conv2 = nn.Conv2d(3, 128, 3, 2) # input, output, kernel, stride
+        self.bnorm2 = nn.BatchNorm2d(128)
+        self.relu = nn.ReLU()
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.pose = nn.Linear(128, 7)
+
+    def forward(self, image):
+       # Image feature layers
+       x = self.conv1(image) 
+       x = self.relu(self.bnorm1(x))
+       x = self.conv2(image) 
+       x = self.relu(self.bnorm2(x))
+       x = self.avgpool(x)
+       x = torch.flatten(x, 1)
+       pose = self.pose(x)
+       return pose
+
+# Quantum 3
+class PoseQuanModel(nn.Module):
+    def __init__(self, shape, n_qubits):
+        super().__init__()
+        n_layers = 3
+        self.weight_shapes = {"weights": (n_layers, n_qubits)}
+        self.input_shape = shape
+        self.pose =qml.qnn.TorchLayer(qnode, self.weight_shapes)
+        self.feature_extractor = resnet18(weights=ResNet18_Weights.DEFAULT)
+        num_ftrs = self.feature_extractor.fc.in_features
+        self.feature_extractor.fc = torch.nn.Linear(num_ftrs, 7)
+
+        # self.feature_extractor.fc = nn.Linear(num_ftrs, 128)
+        # # self.bnorm = nn.BatchNorm1d(128)
+        # self.pose =qml.qnn.TorchLayer(qnode, self.weight_shapes)
+
+    def forward(self, image):
+       # Image feature layers
+       image_features = self.pose(image) # RessNet18 transfer learning
+       pose = self.feature_extractor(image_features)
+    #    image_features = self.feature_extractor(image) # RessNet18 transfer learning
+    #    image_features = image_features.view(image_features.size(0), -1)
+    #    # image_features = self.bnorm(image_features)
+    #    pose = self.pose(image_features)
+       return pose
+
+# Quantum circuit 1
 # # Quantum Resnet
 # class PoseQuanModel(nn.Module):
 #     def __init__(self, shape, n_qubits):
@@ -171,6 +233,8 @@ def qnode(inputs, weights):
 #        pose = self.pose(image_features)
 #        return pose
 
+
+# DIDNT Work
 # # Quantum Resnet
 # def PoseQuanModel(shape, n_qubits):
 #     feature_extractor = resnet18(weights=ResNet18_Weights.DEFAULT)

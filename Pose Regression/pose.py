@@ -33,7 +33,7 @@ from pennylane import numpy as np
 def main():
     # Check if GPU is available
     device = torch.device('cuda:0'if torch.cuda.is_available() else 'cpu')
-    n_qubits = 7
+    n_qubits = 7 #7
     dev = qml.device("default.qubit", wires=n_qubits)
 
     # Assuming that we are on a CUDA machine, this should print a CUDA device:
@@ -48,7 +48,7 @@ def main():
     batch_size = 16 # Change Batch Size o
     learning_rate = 1e-3 #4
     num_workers =2#4
-    nepochs = 5 #"Use it to change iterations"
+    nepochs = 3 #"Use it to change iterations"
     weight_decay = 1e-4
     best_loss = 1e+20 # number gotten from initial resnet18 run
     stop_count = 7
@@ -61,7 +61,8 @@ def main():
     print('------- DATA PROCESSING --------')
     # ResNet50
     data_transforms = transforms.Compose([
-        transforms.Resize((224, 224)),
+        # transforms.Resize((224, 224)),
+        transforms.Resize((128, 128)),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
 
@@ -89,16 +90,17 @@ def main():
 
     #--------------------------------------------#
     #------------------ Training Parameters --------------------------#
-    print('-------------------Pretrained Model Type: RESNET 50------------------------')
-    resnet_input = (3, 224, 224)
-    net = unet(resnet_input)
-    PATH = './pose_unet.pth' # Path to save the best model
-    #net.to(device)
-
-    # print('-------------------Pretrained Model Type: RESNET 50 Quantum Classifier------------------------')
+    # print('-------------------Pretrained Model Type: RESNET 50------------------------')
     # resnet_input = (3, 224, 224)
-    # net = PoseQuanModel(resnet_input, n_qubits)
-    # PATH = './pose_quanFinal.pth' # Path to save the best model
+    # net = unet(resnet_input)
+    # PATH = './pose_unet.pth' # Path to save the best model
+    # #net.to(device)
+
+    print('-------------------Pretrained Model Type: RESNET 50 Quantum Classifier------------------------')
+    # resnet_input = (3, 224, 224)
+    resnet_input = (3, 128, 128)
+    net = PoseQuanModel(resnet_input, n_qubits)
+    PATH = './pose_quanAngleRand.pth' # Path to save the best model
 
 
 
@@ -111,7 +113,9 @@ def main():
 
     criterion = torch.nn.MSELoss()
     # optimizer = torch.optim.AdamW(net.parameters(), lr=learning_rate)  # all params trained
-    optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9) 
+    # optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9) 
+    # optimizer = qml.AdamOptimizer(net.parameters(), 0.001, 0.9)
+    optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate, weight_decay=weight_decay) 
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.9)
     # scheduler = ExponentialLR(optimizer, gamma=0.9)
 
@@ -133,6 +137,7 @@ def main():
             inputs, labels = data[0].to(device), data[1].to(device).float()
             # zero the parameter gradients
             optimizer.zero_grad()
+            # optimizer.reset()
             # forward + backward + optimize
             outputs = net(inputs)
             loss = criterion(outputs, labels)
@@ -192,8 +197,8 @@ def main():
     #--------------------------------------------#
     #---------------------- Testing ----------------------#
     print('Testing \n')
-    net = PoseResNetModel(resnet_input)
-    # net = PoseQuanModel(resnet_input, n_qubits)
+    # net = PoseResNetModel(resnet_input)
+    net = PoseQuanModel(resnet_input, n_qubits)
     # net = PoseNew(resnet_input)
     net.load_state_dict(torch.load(PATH))
     print('---------------LIGHTBOX TESTING----------------')
